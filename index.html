@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Напитки Фартуны</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#055144; --emerald:#20A261; --wine:#4E0000; --cream:#F0EFEB;
+  --bg:#07140f; --bg2:#0d211a; --card:#12281f; --line:#1f3b30;
+  --gold:#C9A24B; --txt:#EAF1ED; --dim:#8fa89d;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:'Inter Tight',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;}
+.app{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+
+.casinobar{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#0a1a14,#07140f);
+  padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);}
+.brand{display:flex;align-items:center;gap:9px;}
+.brand .logo{width:32px;height:32px;border-radius:8px;background:var(--teal);border:1px solid var(--emerald);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff;}
+.brand .nm{font-weight:800;font-size:15px;}
+.brand .nm small{display:block;font-size:9px;letter-spacing:.18em;color:var(--gold);font-weight:700;}
+.bal{text-align:right;}
+.bal .l{font-size:9px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase;}
+.bal .v{font-size:15px;font-weight:800;color:var(--gold);}
+
+.screen{display:none;padding:18px 16px 110px;}
+.screen.active{display:block;animation:fade .25s;}
+@keyframes fade{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+
+.tab{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;}
+.h{font-weight:900;font-size:27px;line-height:1.08;}
+.h .gold{color:var(--gold);}
+.sub{color:var(--dim);font-size:13.5px;margin-top:7px;line-height:1.4;}
+
+.zg{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:18px;}
+.z{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px 8px;text-align:center;cursor:pointer;transition:.12s;}
+.z:active{transform:scale(.95);}
+.z.anchor{border-color:var(--gold);background:linear-gradient(180deg,#1a2a1f,#13241b);}
+.z .sym{font-size:24px;}
+.z .nm{font-size:11px;font-weight:700;margin-top:4px;}
+.z .pr{font-size:10px;color:var(--gold);font-weight:700;margin-top:2px;}
+
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--dim);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:14px;}
+.bottlehero{height:210px;border-radius:18px;background:radial-gradient(120% 120% at 50% 0%,#16332732,transparent),linear-gradient(160deg,var(--teal),#02100b);
+  border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.bottlehero .bigsym{font-size:96px;color:#ffffff10;position:absolute;top:6px;right:14px;font-weight:900;}
+.bottlehero .cat{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--emerald);font-weight:700;}
+.bottlehero .bn{font-weight:900;font-size:25px;text-align:center;padding:0 18px;margin-top:6px;line-height:1.1;}
+.bottlehero .ab{position:absolute;top:12px;left:12px;background:var(--gold);color:#1a1205;font-size:10px;font-weight:800;letter-spacing:.07em;padding:4px 9px;border-radius:20px;}
+.vid{margin-top:12px;background:var(--wine);border-radius:13px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.vid .play{width:36px;height:36px;border-radius:50%;background:#fff2;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.vid .t{font-weight:700;font-size:14px;}
+.vid .t small{display:block;font-weight:500;font-size:11px;color:#e9cccc;margin-top:1px;}
+.legend{margin-top:14px;background:var(--card);border-left:3px solid var(--gold);border-radius:10px;padding:14px 16px;font-size:14px;line-height:1.5;color:#dfeae4;font-style:italic;}
+.priceblock{margin-top:16px;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:16px;}
+.priceblock .svc{font-size:11px;color:var(--dim);}
+.priceblock .rub{font-weight:900;font-size:28px;margin-top:3px;}
+.priceblock .usdt{font-size:14px;color:var(--gold);font-weight:700;margin-top:2px;}
+.btn{margin-top:14px;width:100%;border:none;border-radius:14px;padding:17px;font-family:inherit;font-weight:800;font-size:15px;cursor:pointer;transition:.12s;}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--emerald);color:#04140c;}
+.btn-gold{background:var(--gold);color:#1a1205;}
+.hint{text-align:center;font-size:11px;color:var(--dim);margin-top:9px;line-height:1.4;}
+
+.payamt{text-align:center;margin-top:22px;}
+.payamt .l{font-size:12px;color:var(--dim);}
+.payamt .v{font-weight:900;font-size:44px;color:var(--gold);line-height:1;margin-top:4px;}
+.payamt .net{font-size:12px;color:var(--emerald);font-weight:700;margin-top:6px;}
+.svcrow{margin-top:16px;background:var(--bg2);border-radius:12px;padding:13px 15px;font-size:12.5px;color:var(--dim);line-height:1.45;}
+.svcrow b{color:var(--txt);}
+
+.vmodal{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center;z-index:50;padding:16px;}
+.vmodal.on{display:flex;}
+.vmodal video{width:100%;max-width:480px;border-radius:14px;}
+.vmodal .x{position:absolute;top:16px;right:20px;color:#fff;font-size:30px;cursor:pointer;}
+
+.nav{position:fixed;bottom:0;left:0;right:0;max-width:560px;margin:0 auto;height:64px;background:#06120d;border-top:1px solid var(--line);display:flex;z-index:20;}
+.nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--dim);font-size:10px;font-weight:600;}
+.nav a .ic{font-size:18px;}
+.nav a.on{color:var(--gold);}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="casinobar">
+    <div class="brand"><div class="logo">HR</div><div class="nm">HighRollers Club<small>✦ НАПИТКИ ФАРТУНЫ</small></div></div>
+    <div class="bal"><div class="l">Баланс выигрыша</div><div class="v" id="bal">12 450 USDT</div></div>
+  </div>
+
+  <div class="screen active" id="s-catalog">
+    <span class="tab">Винный бутик · 12 SKU</span>
+    <div class="h">Найди свой <span class="gold">Напиток&nbsp;Фартуны</span></div>
+    <div class="sub">Каждому знаку — свой напиток и личная легенда удачи. Костяк 30–50к, ✦ — коллекционные якоря.</div>
+    <div class="zg" id="zg"></div>
+  </div>
+
+  <div class="screen" id="s-bottle">
+    <span class="back" onclick="go('catalog')">‹ Назад в бутик</span>
+    <div class="bottlehero" id="bhero"></div>
+    <div class="vid" id="vidbtn"><div class="play">▶</div><div class="t">Легенда удачи<small>персональный ролик</small></div></div>
+    <div class="legend" id="blegend"></div>
+    <div class="priceblock">
+      <div class="svc">Услуга «Wine Concierge» — консультация, легенда, дегустация и доставка</div>
+      <div class="rub" id="brub"></div><div class="usdt" id="busdt"></div>
+    </div>
+    <button class="btn btn-primary" onclick="go('pay')">Заказать через Wine Concierge</button>
+    <div class="hint">Оплачивается услуга сопровождения. Бутылка передаётся офлайн в лицензированной винотеке.</div>
+  </div>
+
+  <div class="screen" id="s-pay">
+    <span class="back" onclick="go('bottle')">‹ Назад</span>
+    <span class="tab">Оплата услуги</span>
+    <div class="h">Wine Concierge</div>
+    <div class="payamt"><div class="l">К оплате</div><div class="v" id="payusdt"></div><div class="net">USDT · крипто-баланс HighRollers Club</div></div>
+    <div class="svcrow">Назначение: <b>оплата консультационных услуг Wine Concierge</b>. Бутылка в стоимость услуги не входит, передаётся офлайн. Деньги остаются в контуре казино.</div>
+    <button class="btn btn-gold" id="paybtn">✅ Оплатить с баланса · <span id="payusdt2"></span></button>
+    <div class="hint">Деньги спишутся с баланса выигрыша — консьерж свяжется с вами после оплаты.</div>
+  </div>
+
+  <div class="nav">
+    <a><div class="ic">🎰</div>Игры</a>
+    <a class="on"><div class="ic">🍷</div>Бутик</a>
+    <a><div class="ic">👑</div>VIP</a>
+    <a><div class="ic">👤</div>Профиль</a>
+  </div>
+</div>
+
+<div class="vmodal" id="vmodal"><span class="x" onclick="closeVid()">✕</span><video id="vplayer" controls playsinline></video></div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.ready(); tg.expand();
+try{ tg.setHeaderColor('#07140f'); tg.setBackgroundColor('#07140f'); }catch(e){}
+
+const RATE=95;
+const items=[
+ {s:'♈',sign:'Овен',name:'Gaja Barbaresco',cat:'Красное',rub:67320,leg:'Король Бароло-Барбареско, бунтарь Анджело Гайя — вино первопроходцев.'},
+ {s:'♉',sign:'Телец',name:'Ornellaia',cat:'Красное',rub:63000,leg:'Болгери, землистая мощь и роскошь — вино тех, кто строит империи.'},
+ {s:'♊',sign:'Близнецы',name:'Dom Pérignon Vintage',cat:'Шампанское',rub:63000,leg:'«Идите сюда, я пью звёзды» — шампанское монаха, открывшего игру пузырьков.'},
+ {s:'♋',sign:'Рак',name:'Chablis Grand Cru',cat:'Белое',rub:48000,leg:'Кремни древнего моря в бокале — чистая, прохладная удача.'},
+ {s:'♌',sign:'Лев',name:'Hennessy Paradis',cat:'Коньяк',rub:448485,anchor:1,vid:'out_1.mp4',leg:'Купаж из сотен эо-де-ви, выдержанных десятилетиями. Коньяк королей.'},
+ {s:'♍',sign:'Дева',name:'Corton-Charlemagne',cat:'Белое',rub:60000,leg:'Виноградник императора Карла Великого — белое совершенство.'},
+ {s:'♎',sign:'Весы',name:'Krug Grande Cuvée',cat:'Шампанское',rub:75000,leg:'Ассамбляж из 120+ вин — идеальный баланс в каждом глотке.'},
+ {s:'♏',sign:'Скорпион',name:"Krug Clos d'Ambonnay",cat:'Шампанское',rub:585000,anchor:1,leg:'Одно крошечное поле, считанные бутылки в мире — самое редкое шампанское Krug.'},
+ {s:'♐',sign:'Стрелец',name:'Almaviva',cat:'Красное',rub:57000,leg:'Чили встречает Бордо — дерзкое вино авантюристов.'},
+ {s:'♑',sign:'Козерог',name:'Courvoisier XO',cat:'Коньяк',rub:59235,vid:'out_2.mp4',leg:'«Коньяк Наполеона» — статус, выдержанный временем.'},
+ {s:'♒',sign:'Водолей',name:'Veuve Clicquot La Grande Dame',cat:'Шампанское',rub:48000,leg:'В честь мадам Клико — женщины, перевернувшей мир шампанского.'},
+ {s:'♓',sign:'Рыбы',name:'Hennessy XO',cat:'Коньяк',rub:44985,vid:'out_3.mp4',leg:'Оригинальный X.O, созданный основателем для близкого круга.'},
+];
+const fmt=n=>n.toLocaleString('ru-RU');
+const usdt=n=>Math.round(n/RATE).toLocaleString('ru-RU');
+let cur=null, balance=12450;
+
+const zg=document.getElementById('zg');
+items.forEach((it,i)=>{
+ const d=document.createElement('div');
+ d.className='z'+(it.anchor?' anchor':'');
+ d.innerHTML=`<div class="sym">${it.s}</div><div class="nm">${it.sign}${it.anchor?' ✦':''}</div><div class="pr">${usdt(it.rub)} USDT</div>`;
+ d.onclick=()=>openBottle(i);
+ zg.appendChild(d);
+});
+
+function openBottle(i){
+ cur=items[i];
+ document.getElementById('bhero').innerHTML=
+  `<div class="bigsym">${cur.s}</div>${cur.anchor?'<div class="ab">✦ КОЛЛЕКЦИОННЫЙ ЯКОРЬ</div>':''}<div class="cat">${cur.cat} · ${cur.sign}</div><div class="bn">${cur.name}</div>`;
+ document.getElementById('blegend').textContent='«'+cur.leg+'»';
+ document.getElementById('brub').textContent=fmt(cur.rub)+' ₽';
+ document.getElementById('busdt').textContent='≈ '+usdt(cur.rub)+' USDT';
+ document.getElementById('payusdt').textContent=usdt(cur.rub)+' USDT';
+ document.getElementById('payusdt2').textContent=usdt(cur.rub)+' USDT';
+ go('bottle');
+}
+function go(id){
+ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+ document.getElementById('s-'+id).classList.add('active');
+ window.scrollTo(0,0);
+ try{ id==='catalog'?tg.BackButton.hide():tg.BackButton.show(); }catch(e){}
+}
+try{ tg.BackButton.onClick(()=>{ const a=document.querySelector('.screen.active').id;
+  go(a==='s-pay'?'bottle':'catalog'); }); }catch(e){}
+
+document.getElementById('vidbtn').onclick=()=>{
+ if(cur && cur.vid){ const v=document.getElementById('vplayer'); v.src=cur.vid;
+   document.getElementById('vmodal').classList.add('on'); v.play().catch(()=>{}); }
+ else { tg.showAlert('🎬 Видео-легенда этой позиции сейчас в производстве (съёмка на VR-камеру).'); }
+};
+function closeVid(){ const v=document.getElementById('vplayer'); v.pause(); v.src=''; document.getElementById('vmodal').classList.remove('on'); }
+
+document.getElementById('paybtn').onclick=()=>{
+ if(!cur) return;
+ const order={action:'order', sku:cur.name, sign:cur.sign, rub:cur.rub, usdt:Math.round(cur.rub/RATE)};
+ balance-=order.usdt; document.getElementById('bal').textContent=fmt(balance)+' USDT';
+ try{ tg.HapticFeedback.notificationOccurred('success'); }catch(e){}
+ tg.sendData(JSON.stringify(order)); // уходит боту, окно закроется
+};
+</script>
+</body>
+</html>
