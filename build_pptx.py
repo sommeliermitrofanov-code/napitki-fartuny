@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Генерация готовой презентации проекта скейт-парка в Цхинвале."""
+"""Готовая презентация проекта скейт-парка в Цхинвале (с иллюстрациями)."""
 from pptx import Presentation
 from pptx.util import Inches, Pt, Emu
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.oxml.ns import qn
 
-# Палитра
 BG     = RGBColor(0x0A, 0x0E, 0x1A)
 BG2    = RGBColor(0x0F, 0x16, 0x28)
 CARD   = RGBColor(0x14, 0x1D, 0x33)
@@ -17,238 +15,229 @@ GOLD   = RGBColor(0xFF, 0xC1, 0x07)
 TXT    = RGBColor(0xEA, 0xF0, 0xFA)
 DIM    = RGBColor(0x8B, 0x9A, 0xB8)
 WHITE  = RGBColor(0xFF, 0xFF, 0xFF)
+GREEN  = RGBColor(0x34, 0xD3, 0x99)
+DARK   = RGBColor(0x0A, 0x0E, 0x1A)
 
 prs = Presentation()
 prs.slide_width  = Inches(13.333)
 prs.slide_height = Inches(7.5)
 SW, SH = prs.slide_width, prs.slide_height
 blank = prs.slide_layouts[6]
-
 FONT = "Arial"
+IMG = "img/%s.png"
 
-def slide():
+def slide(bg=BG):
     s = prs.slides.add_slide(blank)
     r = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, SW, SH)
-    r.fill.solid(); r.fill.fore_color.rgb = BG
-    r.line.fill.background()
-    r.shadow.inherit = False
+    r.fill.solid(); r.fill.fore_color.rgb = bg; r.line.fill.background(); r.shadow.inherit=False
     return s
 
-def textbox(s, l, t, w, h, anchor=MSO_ANCHOR.TOP):
-    tb = s.shapes.add_textbox(l, t, w, h)
-    tf = tb.text_frame; tf.word_wrap = True
-    tf.vertical_anchor = anchor
-    return tf
-
 def setrun(r, text, size, color, bold=False, italic=False):
-    r.text = text
-    r.font.size = Pt(size); r.font.name = FONT
-    r.font.color.rgb = color; r.font.bold = bold; r.font.italic = italic
+    r.text=text; r.font.size=Pt(size); r.font.name=FONT
+    r.font.color.rgb=color; r.font.bold=bold; r.font.italic=italic
 
-def para(tf, text, size, color, bold=False, italic=False, space_after=6, align=PP_ALIGN.LEFT, first=False):
-    p = tf.paragraphs[0] if first else tf.add_paragraph()
-    p.alignment = align; p.space_after = Pt(space_after)
-    run = p.add_run(); setrun(run, text, size, color, bold, italic)
-    return p
+def tbox(s,l,t,w,h,anchor=MSO_ANCHOR.TOP):
+    tb=s.shapes.add_textbox(l,t,w,h); tf=tb.text_frame
+    tf.word_wrap=True; tf.vertical_anchor=anchor; return tf
 
-def kicker(s, text):
-    tf = textbox(s, Inches(0.85), Inches(0.7), Inches(11), Inches(0.5))
-    para(tf, text.upper(), 14, GOLD, bold=True, first=True)
+def para(tf,text,size,color,bold=False,italic=False,sa=6,align=PP_ALIGN.LEFT,first=False,sb=0):
+    p=tf.paragraphs[0] if first else tf.add_paragraph()
+    p.alignment=align; p.space_after=Pt(sa); p.space_before=Pt(sb)
+    setrun(p.add_run(),text,size,color,bold,italic); return p
 
-def card(s, l, t, w, h, icon, title, body, accent_border=False):
-    box = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, l, t, w, h)
-    box.fill.solid(); box.fill.fore_color.rgb = CARD
-    box.line.color.rgb = ACCENT if accent_border else LINE
-    box.line.width = Pt(1.25 if accent_border else 1)
-    box.shadow.inherit = False
-    try: box.adjustments[0] = 0.06
-    except Exception: pass
-    tf = box.text_frame; tf.word_wrap = True
-    tf.margin_left = Inches(0.22); tf.margin_right = Inches(0.22)
-    tf.margin_top = Inches(0.2); tf.margin_bottom = Inches(0.2)
-    para(tf, icon, 30, GOLD, first=True, space_after=4)
-    para(tf, title, 17, WHITE, bold=True, space_after=5)
-    para(tf, body, 12.5, DIM, space_after=0)
+def kicker(s,text,l=Inches(0.85),t=Inches(0.62)):
+    bar=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,l,t+Inches(0.09),Inches(0.34),Pt(3))
+    bar.fill.solid(); bar.fill.fore_color.rgb=ACCENT; bar.line.fill.background(); bar.shadow.inherit=False
+    tf=tbox(s,l+Inches(0.45),t,Inches(8),Inches(0.45))
+    para(tf,text.upper(),14,GOLD,bold=True,first=True)
 
-def number_row(s, l, t, w, num, title, body):
-    chip = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, l, t, Inches(0.55), Inches(0.55))
-    chip.fill.solid(); chip.fill.fore_color.rgb = ACCENT
-    chip.line.fill.background(); chip.shadow.inherit = False
-    ctf = chip.text_frame; ctf.vertical_anchor = MSO_ANCHOR.MIDDLE
-    p = ctf.paragraphs[0]; p.alignment = PP_ALIGN.CENTER
-    setrun(p.add_run(), str(num), 20, RGBColor(0x1A,0x12,0x05), bold=True)
-    tf = textbox(s, l + Inches(0.75), t - Inches(0.05), w - Inches(0.8), Inches(0.7), MSO_ANCHOR.MIDDLE)
-    p = tf.paragraphs[0]; p.space_after = Pt(0)
-    setrun(p.add_run(), title + "  ", 16, WHITE, bold=True)
-    setrun(p.add_run(), body, 14, DIM)
+def picture(s,name,l,t,w,h,border=True):
+    pic=s.shapes.add_picture(IMG%name,l,t,w,h)
+    if border:
+        pic.line.color.rgb=LINE; pic.line.width=Pt(1.25)
+    return pic
 
-def title_lines(s, top, lines, size=42):
-    tf = textbox(s, Inches(0.85), top, Inches(11.6), Inches(1.8))
-    for i, (txt, col) in enumerate(lines):
-        para(tf, txt, size, col, bold=True, first=(i==0), space_after=0)
+def title_block(s,top,lines,size=40):
+    tf=tbox(s,Inches(0.85),top,Inches(6.1),Inches(2))
+    for i,(t,c) in enumerate(lines):
+        para(tf,t,size,c,bold=True,first=(i==0),sa=0)
 
-# ---------- Слайд 1: Титул ----------
-s = slide()
-band = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.25), SH)
-band.fill.solid(); band.fill.fore_color.rgb = ACCENT; band.line.fill.background(); band.shadow.inherit=False
-kicker(s, "Социальный проект · Южная Осетия")
-tf = textbox(s, Inches(0.85), Inches(2.0), Inches(11.6), Inches(3))
-para(tf, "Скейт-парк", 76, TXT, bold=True, first=True, space_after=0)
-p = tf.add_paragraph(); p.space_after = Pt(0)
-setrun(p.add_run(), "в ", 76, TXT, bold=True)
-setrun(p.add_run(), "Цхинвале", 76, GOLD, bold=True)
-tf2 = textbox(s, Inches(0.85), Inches(5.0), Inches(10), Inches(1.3))
-para(tf2, "Современное и безопасное пространство для досуга и спорта\nдетей и подростков города.", 20, DIM, first=True)
-pill = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.85), Inches(6.4), Inches(4.6), Inches(0.6))
-pill.fill.solid(); pill.fill.fore_color.rgb = ACCENT; pill.line.fill.background(); pill.shadow.inherit=False
-ptf = pill.text_frame; ptf.vertical_anchor = MSO_ANCHOR.MIDDLE
-pp = ptf.paragraphs[0]; pp.alignment = PP_ALIGN.CENTER
-setrun(pp.add_run(), "BMX · Самокат · Скейтборд", 18, RGBColor(0x1A,0x12,0x05), bold=True)
+def bullets(s,top,items,w=Inches(5.7)):
+    tf=tbox(s,Inches(0.95),top,w,Inches(3.8))
+    for i,(b,d) in enumerate(items):
+        p=tf.paragraphs[0] if i==0 else tf.add_paragraph()
+        p.space_after=Pt(11); p.space_before=Pt(0)
+        setrun(p.add_run(),"●  ",13,ACCENT,bold=True)
+        setrun(p.add_run(),b+"  ",16,WHITE,bold=True)
+        if d: setrun(p.add_run(),d,15,DIM)
 
-# ---------- Слайд 2: Проблема ----------
-s = slide()
-kicker(s, "Проблема")
-title_lines(s, Inches(1.4), [("Детям и подросткам", TXT), ("негде проводить время", TXT)])
-tf = textbox(s, Inches(0.85), Inches(3.5), Inches(11), Inches(3))
-p = tf.paragraphs[0]; p.space_after = Pt(14)
-setrun(p.add_run(), "В Цхинвале и в Южной Осетии в целом ", 19, TXT)
-setrun(p.add_run(), "не развита инфраструктура для досуга", 19, GOLD, bold=True)
-setrun(p.add_run(), " молодёжи. Современных площадок для активного отдыха почти нет.", 19, TXT)
-p2 = tf.add_paragraph()
-setrun(p2.add_run(), "В итоге дети катаются на оживлённых улицах, парковках и тротуарах — это ", 19, TXT)
-setrun(p2.add_run(), "опасно", 19, GOLD, bold=True)
-setrun(p2.add_run(), " и для них, и для прохожих. Энергия молодёжи не находит здорового выхода.", 19, TXT)
+# панель справа под иллюстрацию (16:9 от 1400x900 → ratio 1.5556)
+RX, RW = Inches(6.95), Inches(5.7)
+RH = Inches(5.7/ (1400/900))   # ~3.66"
+RY = Inches(2.05)
 
-# ---------- Слайд 3: Решение ----------
-s = slide()
-kicker(s, "Решение")
-title_lines(s, Inches(1.4), [("Построить современный", TXT), ("скейт-парк", GOLD)])
-y = Inches(3.7); w = Inches(3.73); gap = Inches(0.2); x0 = Inches(0.85); h = Inches(2.9)
-card(s, x0, y, w, h, "▰", "Качественное покрытие", "Рампы, фигуры и гладкое профессиональное основание.")
-card(s, x0+w+gap, y, w, h, "❖", "Зона отдыха", "Скамейки, освещение, озеленение — место притяжения города.")
-card(s, x0+2*(w+gap), y, w, h, "◎", "Для всех уровней", "От первых шагов новичка до тренировки сложных трюков.")
+# ---------- 1. ТИТУЛ ----------
+s=slide()
+iw=Inches(7.5*(1400/900)); ix=Emu(int((SW-iw)/1));
+iw_emu=int(7.5*(1400/900)*914400); ix_emu=int((int(SW)-iw_emu)/2)
+s.shapes.add_picture(IMG%"hero",ix_emu,0,height=SH)
+band=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,0,0,Inches(0.22),SH)
+band.fill.solid(); band.fill.fore_color.rgb=ACCENT; band.line.fill.background(); band.shadow.inherit=False
+kicker(s,"Социальный проект · Южная Осетия")
+tf=tbox(s,Inches(0.85),Inches(1.45),Inches(11),Inches(2.6))
+para(tf,"Скейт-парк",70,TXT,bold=True,first=True,sa=0)
+p=tf.add_paragraph(); p.space_after=Pt(0)
+setrun(p.add_run(),"в ",70,TXT,bold=True); setrun(p.add_run(),"Цхинвале",70,GOLD,bold=True)
+tf2=tbox(s,Inches(0.9),Inches(5.55),Inches(8),Inches(1.2))
+para(tf2,"Современное и безопасное пространство для досуга\nи спорта детей и подростков города.",19,DIM,first=True)
+pill=s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,Inches(0.9),Inches(6.55),Inches(4.5),Inches(0.6))
+pill.fill.solid(); pill.fill.fore_color.rgb=ACCENT; pill.line.fill.background(); pill.shadow.inherit=False
+ptf=pill.text_frame; ptf.vertical_anchor=MSO_ANCHOR.MIDDLE
+pp=ptf.paragraphs[0]; pp.alignment=PP_ALIGN.CENTER
+setrun(pp.add_run(),"BMX · Самокат · Скейтборд",18,RGBColor(0x1A,0x12,0x05),bold=True)
 
-# ---------- Слайд 4: Снаряды ----------
-s = slide()
-kicker(s, "Спортивные направления")
-title_lines(s, Inches(1.4), [("Три вида спорта на одной площадке", TXT)], size=38)
-y = Inches(3.0); h = Inches(2.7)
-card(s, x0, y, w, h, "BMX", "Велосипеды", "Трюковые велосипеды — сила, координация и зрелищность.")
-card(s, x0+w+gap, y, w, h, "◔", "Трюковой самокат", "Самый популярный и доступный старт для детей.")
-card(s, x0+2*(w+gap), y, w, h, "▱", "Скейтборд", "Классика уличного спорта: баланс и чувство тела.")
-tf = textbox(s, Inches(0.85), Inches(6.1), Inches(11), Inches(0.8))
-para(tf, "Дети осваивают новые спортивные снаряды и находят дело по душе.", 19, DIM, first=True)
+# ---------- 2. ПРОБЛЕМА ----------
+s=slide()
+kicker(s,"Проблема")
+title_block(s,Inches(1.4),[("Детям и подросткам",TXT),("негде проводить время",TXT)],size=34)
+bullets(s,Inches(3.4),[
+ ("Нет инфраструктуры.","В Цхинвале почти нет современных площадок для активного отдыха молодёжи."),
+ ("Опасно.","Дети катаются на улицах, парковках и тротуарах — риск для них и прохожих."),
+ ("Энергия без выхода.","У подростков нет места для здорового и полезного досуга."),
+])
+picture(s,"problem",RX,RY,RW,RH)
 
-# ---------- Слайд 5: Безопасность ----------
-s = slide()
-kicker(s, "Главный приоритет")
-title_lines(s, Inches(1.3), [("Безопасность прежде всего", ACCENT)], size=40)
-items = [
-    ("Защитная экипировка.", "Шлемы, наколенники, налокотники и перчатки — обязательны для всех."),
-    ("Безопасное покрытие.", "Сертифицированные материалы, продуманные радиусы фигур, без острых углов."),
-    ("Зонирование.", "Раздельные зоны для новичков и опытных, чтобы потоки не пересекались."),
-    ("Освещение и аптечка.", "Хороший свет вечером и медпункт первой помощи прямо на месте."),
-]
-yy = Inches(2.7)
-for i,(t,b) in enumerate(items):
-    number_row(s, Inches(0.85), yy, Inches(11.6), i+1, t, b)
-    yy += Inches(1.05)
+# ---------- 3. РЕШЕНИЕ ----------
+s=slide()
+kicker(s,"Решение")
+title_block(s,Inches(1.4),[("Построить современный",TXT),("скейт-парк",GOLD)],size=34)
+bullets(s,Inches(3.4),[
+ ("Качественное покрытие.","Рампы, фигуры и гладкое профессиональное основание."),
+ ("Зона отдыха.","Скамейки, освещение и озеленение — место притяжения города."),
+ ("Для всех уровней.","От первых шагов новичка до тренировки сложных трюков."),
+])
+picture(s,"solution",RX,RY,RW,RH)
 
-# ---------- Слайд 6: Тренер ----------
-s = slide()
-kicker(s, "Ключевая роль")
-tf = textbox(s, Inches(0.85), Inches(1.3), Inches(11), Inches(1))
-p = tf.paragraphs[0]
-setrun(p.add_run(), "Нужен ", 42, TXT, bold=True)
-setrun(p.add_run(), "тренер", 42, GOLD, bold=True)
-tf2 = textbox(s, Inches(0.85), Inches(2.25), Inches(11.5), Inches(0.8))
-para(tf2, "Без наставника спорт превращается в риск. Профессиональный тренер — основа безопасного и результативного парка.", 17, DIM, first=True)
-y = Inches(3.4); w2 = Inches(5.66); h = Inches(1.75)
-card(s, x0, y, w2, h, "▲", "Правильная техника", "Учит трюкам и падениям так, чтобы избежать травм.")
-card(s, x0+w2+gap, y, w2, h, "◉", "Контроль и порядок", "Следит за дисциплиной, экипировкой и безопасностью на площадке.")
-card(s, x0, y+h+gap, w2, h, "★", "Спортивные секции", "Группы, прогресс, соревнования и мотивация для детей.")
-card(s, x0+w2+gap, y+h+gap, w2, h, "♥", "Наставничество", "Авторитетный взрослый, который направляет подростков.")
+# ---------- 4. СНАРЯДЫ (3 карточки) ----------
+s=slide()
+kicker(s,"Спортивные направления")
+title_block(s,Inches(1.25),[("Три вида спорта на одной площадке",TXT)],size=34)
+cw=Inches(3.95); gap=Inches(0.22); x0=Inches(0.85); cy=Inches(2.7); ch=Inches(4.1)
+data=[("c_bmx","BMX","Сила, координация и зрелищность."),
+      ("c_scooter","Трюковой самокат","Доступный старт для детей."),
+      ("c_skate","Скейтборд","Баланс и чувство тела.")]
+for i,(img,t,d) in enumerate(data):
+    x=x0+i*(cw+gap)
+    box=s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,x,cy,cw,ch)
+    box.fill.solid(); box.fill.fore_color.rgb=CARD; box.line.color.rgb=LINE; box.shadow.inherit=False
+    imh=Inches(float(cw.inches)/(600/470))
+    s.shapes.add_picture(IMG%img,x+Inches(0.12),cy+Inches(0.12),cw-Inches(0.24),imh)
+    tf=tbox(s,x+Inches(0.25),cy+imh+Inches(0.2),cw-Inches(0.5),Inches(1.2))
+    para(tf,t,19,WHITE,bold=True,first=True,sa=4)
+    para(tf,d,14,DIM)
+tf=tbox(s,Inches(0.85),Inches(6.95),Inches(11.6),Inches(0.5))
+para(tf,"Дети осваивают новые спортивные снаряды и находят дело по душе.",16,GOLD,first=True)
 
-# ---------- Слайд 7: Социальная польза ----------
-s = slide()
-kicker(s, "Социальная сфера")
-title_lines(s, Inches(1.3), [("Польза для города и его молодёжи", TXT)], size=36)
-pills = ["Здоровье и спорт вместо улицы","Меньше детской преступности","Активный и полезный досуг",
-         "Новые знакомства и команда","Точка притяжения города","Будущие чемпионы Осетии",
-         "Гордость и развитие региона"]
-px, py = Inches(0.85), Inches(2.9)
-maxx = Inches(12.5); xx = px
+# ---------- 5. БЕЗОПАСНОСТЬ ----------
+s=slide()
+kicker(s,"Главный приоритет")
+title_block(s,Inches(1.3),[("Безопасность прежде всего",ACCENT)],size=36)
+items=[("Защитная экипировка.","Шлемы, наколенники, налокотники, перчатки — для всех."),
+       ("Безопасное покрытие.","Сертифицированные материалы, без острых углов."),
+       ("Зонирование.","Раздельные зоны для новичков и опытных."),
+       ("Освещение и аптечка.","Свет вечером и медпункт первой помощи на месте.")]
+yy=Inches(2.55)
+for i,(t,d) in enumerate(items):
+    chip=s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,Inches(0.9),yy,Inches(0.5),Inches(0.5))
+    chip.fill.solid(); chip.fill.fore_color.rgb=ACCENT; chip.line.fill.background(); chip.shadow.inherit=False
+    ctf=chip.text_frame; ctf.vertical_anchor=MSO_ANCHOR.MIDDLE
+    cp=ctf.paragraphs[0]; cp.alignment=PP_ALIGN.CENTER
+    setrun(cp.add_run(),str(i+1),18,DARK,bold=True)
+    tf=tbox(s,Inches(1.55),yy-Inches(0.05),Inches(5.3),Inches(0.7),MSO_ANCHOR.MIDDLE)
+    p=tf.paragraphs[0]; p.space_after=Pt(0)
+    setrun(p.add_run(),t+" ",15,WHITE,bold=True); setrun(p.add_run(),d,13.5,DIM)
+    yy+=Inches(1.02)
+picture(s,"safety",RX,Inches(2.4),RW,RH)
+
+# ---------- 6. ТРЕНЕР ----------
+s=slide()
+kicker(s,"Ключевая роль")
+tf=tbox(s,Inches(0.85),Inches(1.3),Inches(6),Inches(1))
+p=tf.paragraphs[0]
+setrun(p.add_run(),"Нужен ",40,TXT,bold=True); setrun(p.add_run(),"тренер",40,GOLD,bold=True)
+tf2=tbox(s,Inches(0.9),Inches(2.25),Inches(5.7),Inches(1))
+para(tf2,"Без наставника спорт превращается в риск. Тренер — основа безопасного и результативного парка.",15,DIM,first=True)
+bullets(s,Inches(3.5),[
+ ("Правильная техника.","Учит трюкам и падениям так, чтобы избежать травм."),
+ ("Контроль и порядок.","Следит за дисциплиной и экипировкой на площадке."),
+ ("Спортивные секции.","Группы, прогресс, соревнования и мотивация."),
+ ("Наставничество.","Авторитетный взрослый, который направляет ребят."),
+])
+picture(s,"coach",RX,RY,RW,RH)
+
+# ---------- 7. СОЦИАЛЬНАЯ ПОЛЬЗА ----------
+s=slide()
+kicker(s,"Социальная сфера")
+title_block(s,Inches(1.3),[("Польза для города",TXT),("и его молодёжи",TXT)],size=36)
+pills=["Здоровье и спорт вместо улицы","Меньше детской преступности","Активный полезный досуг",
+       "Новые знакомства и команда","Точка притяжения города","Будущие чемпионы Осетии",
+       "Гордость и развитие региона"]
+px,py=Inches(0.9),Inches(2.6); xx=px; maxx=Inches(6.55)
 for txt in pills:
-    wpx = Inches(0.5 + len(txt)*0.115)
-    if xx + wpx > maxx:
-        xx = px; py += Inches(0.85)
-    pill = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, xx, py, wpx, Inches(0.62))
-    pill.fill.solid(); pill.fill.fore_color.rgb = BG2; pill.line.color.rgb = LINE
-    pill.shadow.inherit=False
-    ptf = pill.text_frame; ptf.vertical_anchor = MSO_ANCHOR.MIDDLE
-    pp = ptf.paragraphs[0]; pp.alignment = PP_ALIGN.CENTER
-    setrun(pp.add_run(), txt, 14, TXT, bold=True)
-    xx += wpx + Inches(0.22)
-tf = textbox(s, Inches(0.85), Inches(6.2), Inches(11.6), Inches(0.9))
-para(tf, "Парк объединяет молодёжь вокруг здорового образа жизни и даёт детям цель.", 19, DIM, first=True)
+    w=Inches(0.5+len(txt)*0.108)
+    if xx+w>maxx: xx=px; py=Inches(py.inches+0.62)
+    pl=s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,xx,py,w,Inches(0.55))
+    pl.fill.solid(); pl.fill.fore_color.rgb=BG2; pl.line.color.rgb=LINE; pl.shadow.inherit=False
+    ptf=pl.text_frame; ptf.vertical_anchor=MSO_ANCHOR.MIDDLE
+    ptf.margin_left=Inches(0.1); ptf.margin_right=Inches(0.1)
+    pp=ptf.paragraphs[0]; pp.alignment=PP_ALIGN.CENTER
+    setrun(pp.add_run(),txt,12.5,TXT,bold=True)
+    xx=Inches(xx.inches+w.inches+0.16)
+picture(s,"social",RX,RY,RW,RH)
 
-# ---------- Слайд 8: Экономика / бюджет ----------
-s = slide()
-kicker(s, "Экономика и бюджет")
-title_lines(s, Inches(1.3), [("Выгода для местного бизнеса и казны", TXT)], size=34)
-tf = textbox(s, Inches(0.85), Inches(2.4), Inches(11.6), Inches(1.2))
-p = tf.paragraphs[0]
-setrun(p.add_run(), "С появлением парка вырастет спрос на спортивный инвентарь. Это ", 18, TXT)
-setrun(p.add_run(), "возможность для местных торговцев", 18, GOLD, bold=True)
-setrun(p.add_run(), " продавать самокаты, скейтборды, BMX, запчасти и защитную экипировку.", 18, TXT)
-y = Inches(4.0); w = Inches(3.73); h = Inches(2.6)
-def stat(l, big, body):
-    box = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, l, y, w, h)
-    box.fill.solid(); box.fill.fore_color.rgb = CARD; box.line.color.rgb = LINE; box.shadow.inherit=False
-    tf = box.text_frame; tf.word_wrap=True
-    tf.margin_left=Inches(0.25); tf.margin_top=Inches(0.3)
-    para(tf, big, 34, GOLD, bold=True, first=True, space_after=8)
-    para(tf, body, 15, DIM)
-stat(x0, "Рост продаж", "Больше выручки у местных продавцов инвентаря и экипировки.")
-stat(x0+w+gap, "Рабочие места", "Магазины, прокат, сервис, тренеры — новая занятость в городе.")
-box = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x0+2*(w+gap), y, w, h)
-box.fill.solid(); box.fill.fore_color.rgb = CARD; box.line.color.rgb = GOLD; box.line.width=Pt(1.5); box.shadow.inherit=False
-tf = box.text_frame; tf.word_wrap=True; tf.margin_left=Inches(0.25); tf.margin_top=Inches(0.3)
-para(tf, "В бюджет", 34, GOLD, bold=True, first=True, space_after=8)
-p = tf.add_paragraph()
-setrun(p.add_run(), "Налоги и сборы с торговли — ", 15, DIM)
-setrun(p.add_run(), "средства в казну города", 15, WHITE, bold=True)
-setrun(p.add_run(), ".", 15, DIM)
+# ---------- 8. ЭКОНОМИКА / БЮДЖЕТ ----------
+s=slide()
+kicker(s,"Экономика и бюджет")
+title_block(s,Inches(1.3),[("Выгода для бизнеса и казны",TXT)],size=33)
+bullets(s,Inches(3.0),[
+ ("Рост продаж.","Местные торговцы продают самокаты, скейты, BMX, запчасти и защиту."),
+ ("Новые рабочие места.","Магазины, прокат, сервис и тренеры."),
+ ("Средства в бюджет.","Налоги и сборы с торговли пополняют казну города."),
+])
+picture(s,"budget",RX,RY,RW,RH)
 
-# ---------- Слайд 9: Все плюсы ----------
-s = slide()
-kicker(s, "Итог")
-title_lines(s, Inches(1.3), [("Все плюсы проекта в одном месте", TXT)], size=36)
-y = Inches(3.0); w2 = Inches(5.66); h = Inches(1.8)
-card(s, x0, y, w2, h, "▱", "Спорт и развитие", "BMX, самокат, скейтборд — новые навыки для детей.")
-card(s, x0+w2+gap, y, w2, h, "◈", "Безопасность", "Экипировка, зонирование, тренер и медпункт.")
-card(s, x0, y+h+gap, w2, h, "♥", "Социальная польза", "Здоровый досуг и меньше уличных рисков.")
-card(s, x0+w2+gap, y+h+gap, w2, h, "₽", "Доход в бюджет", "Торговля инвентарём и налоги в казну города.")
+# ---------- 9. ВСЕ ПЛЮСЫ ----------
+s=slide()
+kicker(s,"Итог")
+title_block(s,Inches(1.4),[("Все плюсы проекта",TXT)],size=36)
+bullets(s,Inches(2.7),[
+ ("Спорт и развитие.","BMX, самокат, скейтборд — новые навыки для детей."),
+ ("Безопасность.","Экипировка, зонирование, тренер и медпункт."),
+ ("Социальная польза.","Здоровый досуг и меньше уличных рисков."),
+ ("Доход в бюджет.","Торговля инвентарём и налоги в казну города."),
+])
+picture(s,"plus",RX,RY,RW,RH)
 
-# ---------- Слайд 10: Призыв ----------
-s = slide()
-band = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.25), SH)
-band.fill.solid(); band.fill.fore_color.rgb = ACCENT; band.line.fill.background(); band.shadow.inherit=False
-kicker(s, "Призыв к действию")
-tf = textbox(s, Inches(0.85), Inches(1.9), Inches(11.6), Inches(2))
-para(tf, "Дадим детям", 58, TXT, bold=True, first=True, space_after=0)
-para(tf, "место для роста", 58, GOLD, bold=True, space_after=0)
-bar = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.9), Inches(4.5), Inches(0.08), Inches(1.3))
-bar.fill.solid(); bar.fill.fore_color.rgb = ACCENT; bar.line.fill.background(); bar.shadow.inherit=False
-tf2 = textbox(s, Inches(1.15), Inches(4.5), Inches(10), Inches(1.4), MSO_ANCHOR.MIDDLE)
-para(tf2, "«Скейт-парк — это инвестиция в здоровое, активное\nи успешное будущее Южной Осетии».", 24, TXT, bold=True, italic=True, first=True)
-pill = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.85), Inches(6.2), Inches(3.4), Inches(0.65))
-pill.fill.solid(); pill.fill.fore_color.rgb = ACCENT; pill.line.fill.background(); pill.shadow.inherit=False
-ptf = pill.text_frame; ptf.vertical_anchor=MSO_ANCHOR.MIDDLE
-pp = ptf.paragraphs[0]; pp.alignment=PP_ALIGN.CENTER
-setrun(pp.add_run(), "Поддержать проект", 18, RGBColor(0x1A,0x12,0x05), bold=True)
-tf3 = textbox(s, Inches(4.5), Inches(6.2), Inches(4), Inches(0.65), MSO_ANCHOR.MIDDLE)
-para(tf3, "Цхинвал · 2026", 18, DIM, bold=True, first=True)
+# ---------- 10. ПРИЗЫВ ----------
+s=slide()
+s.shapes.add_picture(IMG%"final",ix_emu,0,height=SH)
+band=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,0,0,Inches(0.22),SH)
+band.fill.solid(); band.fill.fore_color.rgb=ACCENT; band.line.fill.background(); band.shadow.inherit=False
+kicker(s,"Призыв к действию")
+tf=tbox(s,Inches(0.85),Inches(1.5),Inches(11),Inches(2))
+para(tf,"Дадим детям",54,TXT,bold=True,first=True,sa=0)
+para(tf,"место для роста",54,GOLD,bold=True,sa=0)
+barq=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,Inches(0.9),Inches(3.95),Inches(0.07),Inches(1.2))
+barq.fill.solid(); barq.fill.fore_color.rgb=ACCENT; barq.line.fill.background(); barq.shadow.inherit=False
+tf2=tbox(s,Inches(1.15),Inches(3.9),Inches(4.0),Inches(1.4),MSO_ANCHOR.MIDDLE)
+para(tf2,"«Скейт-парк — это инвестиция в активное будущее Южной Осетии».",21,TXT,bold=True,italic=True,first=True)
+pill=s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,Inches(0.9),Inches(5.7),Inches(3.4),Inches(0.62))
+pill.fill.solid(); pill.fill.fore_color.rgb=ACCENT; pill.line.fill.background(); pill.shadow.inherit=False
+ptf=pill.text_frame; ptf.vertical_anchor=MSO_ANCHOR.MIDDLE
+pp=ptf.paragraphs[0]; pp.alignment=PP_ALIGN.CENTER
+setrun(pp.add_run(),"Поддержать проект",18,DARK,bold=True)
+tf3=tbox(s,Inches(4.55),Inches(5.7),Inches(4),Inches(0.62),MSO_ANCHOR.MIDDLE)
+para(tf3,"Цхинвал · 2026",18,DIM,bold=True,first=True)
 
 prs.save("/home/user/napitki-fartuny/skatepark.pptx")
-print("OK:", len(prs.slides.__iter__.__self__._sldIdLst), "слайдов")
+print("OK slides:", len(prs.slides._sldIdLst))
