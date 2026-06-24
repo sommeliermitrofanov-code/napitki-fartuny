@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Скейт-парк в Цхинвале · Проект</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0e1a; --bg2:#0f1628; --card:#141d33; --line:#243150;
+  --accent:#FF5722; --accent2:#FFC107; --cyan:#22D3EE; --green:#34D399;
+  --txt:#EAF0FA; --dim:#8B9AB8;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:'Inter Tight',sans-serif;background:var(--bg);color:var(--txt);height:100%;overflow:hidden;}
+body{position:fixed;inset:0;}
+
+.deck{height:100%;width:100%;position:relative;}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;
+  padding:6vh 7vw;overflow-y:auto;}
+.slide.active{display:flex;animation:fade .4s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+.kicker{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;font-size:clamp(11px,1.4vw,14px);font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--accent2);margin-bottom:18px;}
+.kicker::before{content:"";width:26px;height:2px;background:var(--accent);}
+h1{font-weight:900;font-size:clamp(30px,6.2vw,72px);line-height:1.03;letter-spacing:-.02em;}
+h2{font-weight:900;font-size:clamp(26px,4.6vw,52px);line-height:1.06;letter-spacing:-.015em;margin-bottom:8px;}
+.lead{color:var(--dim);font-size:clamp(15px,2.2vw,23px);line-height:1.45;margin-top:18px;max-width:30ch;}
+.grad{background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+
+.body{margin-top:26px;font-size:clamp(15px,2vw,21px);line-height:1.55;color:#D6E0F2;max-width:62ch;}
+.body p+p{margin-top:14px;}
+
+.cards{display:grid;gap:14px;margin-top:30px;}
+.c3{grid-template-columns:repeat(3,1fr);}
+.c2{grid-template-columns:repeat(2,1fr);}
+@media(max-width:760px){.c3,.c2{grid-template-columns:1fr;}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;transition:.15s;}
+.card:hover{border-color:var(--accent);transform:translateY(-3px);}
+.card .ic{font-size:clamp(26px,4vw,40px);}
+.card h3{font-size:clamp(16px,2vw,21px);font-weight:800;margin-top:10px;}
+.card p{font-size:clamp(13px,1.6vw,16px);color:var(--dim);line-height:1.45;margin-top:7px;}
+
+.list{margin-top:26px;display:grid;gap:13px;max-width:64ch;}
+.li{display:flex;gap:15px;align-items:flex-start;background:var(--bg2);border:1px solid var(--line);
+  border-radius:14px;padding:16px 18px;}
+.li .n{flex:none;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#1a1205;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.li .t{font-size:clamp(14px,1.8vw,19px);line-height:1.4;}
+.li .t b{color:#fff;}
+.li .t span{color:var(--dim);}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px;}
+@media(max-width:760px){.stats{grid-template-columns:1fr;}}
+.stat{background:linear-gradient(160deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:18px;padding:24px;}
+.stat .v{font-weight:900;font-size:clamp(30px,5vw,52px);line-height:1;
+  background:linear-gradient(120deg,var(--accent2),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.stat .l{color:var(--dim);font-size:clamp(13px,1.6vw,16px);margin-top:9px;line-height:1.35;}
+
+.pillrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;}
+.pill{background:var(--bg2);border:1px solid var(--line);border-radius:30px;padding:10px 18px;
+  font-size:clamp(13px,1.7vw,17px);font-weight:600;}
+.pill b{color:var(--accent2);}
+
+.quote{margin-top:28px;border-left:3px solid var(--accent);padding:6px 0 6px 22px;
+  font-size:clamp(17px,2.4vw,26px);line-height:1.4;font-weight:600;font-style:italic;max-width:34ch;}
+
+.cta{margin-top:34px;display:flex;flex-wrap:wrap;gap:14px;}
+.cta .b{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a1205;font-weight:800;
+  border-radius:14px;padding:16px 26px;font-size:clamp(15px,2vw,19px);}
+.cta .b.ghost{background:transparent;border:1px solid var(--line);color:var(--txt);}
+
+.bg-emoji{position:absolute;font-size:34vw;opacity:.04;right:-3vw;bottom:-6vh;pointer-events:none;line-height:1;}
+
+/* controls */
+.hud{position:fixed;bottom:18px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:16px;z-index:30;}
+.dots{display:flex;gap:7px;}
+.dot{width:8px;height:8px;border-radius:50%;background:#2c3a5a;cursor:pointer;transition:.2s;}
+.dot.on{background:var(--accent2);width:24px;border-radius:5px;}
+.arrows{position:fixed;inset:0;pointer-events:none;z-index:25;}
+.arrows button{position:absolute;top:50%;transform:translateY(-50%);pointer-events:auto;
+  width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:#0f1628cc;color:#fff;
+  font-size:20px;cursor:pointer;backdrop-filter:blur(6px);transition:.15s;}
+.arrows button:hover{background:var(--accent);color:#1a1205;border-color:var(--accent);}
+.arrows .prev{left:14px;} .arrows .next{right:14px;}
+.counter{position:fixed;top:16px;right:20px;font-size:13px;font-weight:700;color:var(--dim);letter-spacing:.1em;z-index:30;}
+.brandtag{position:fixed;top:16px;left:20px;font-size:12px;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent2);z-index:30;}
+@media(max-width:760px){.arrows button{width:38px;height:38px;font-size:17px;} .brandtag{display:none;}}
+</style>
+</head>
+<body>
+<div class="brandtag">🛹 Цхинвал · Проект</div>
+<div class="counter"><span id="cur">1</span> / <span id="tot">10</span></div>
+
+<div class="deck" id="deck">
+
+  <!-- 1 ТИТУЛ -->
+  <section class="slide active">
+    <span class="bg-emoji">🛹</span>
+    <span class="kicker">Социальный проект · Южная Осетия</span>
+    <h1>Скейт-парк<br>в <span class="grad">Цхинвале</span></h1>
+    <p class="lead">Современное и безопасное пространство для досуга и спорта детей и подростков города.</p>
+    <div class="cta">
+      <span class="b">BMX · Самокат · Скейтборд</span>
+    </div>
+  </section>
+
+  <!-- 2 ПРОБЛЕМА -->
+  <section class="slide">
+    <span class="bg-emoji">❗</span>
+    <span class="kicker">Проблема</span>
+    <h2>Детям и подросткам<br>негде проводить время</h2>
+    <div class="body">
+      <p>В Цхинвале и в Южной Осетии в целом <b>не развита инфраструктура для досуга</b> молодёжи. Современных площадок для активного отдыха почти нет.</p>
+      <p>В итоге дети катаются на оживлённых улицах, парковках и тротуарах — это <b>опасно</b> и для них, и для прохожих. Энергия молодёжи не находит здорового выхода.</p>
+    </div>
+  </section>
+
+  <!-- 3 РЕШЕНИЕ -->
+  <section class="slide">
+    <span class="bg-emoji">🛹</span>
+    <span class="kicker">Решение</span>
+    <h2>Построить современный<br><span class="grad">скейт-парк</span></h2>
+    <p class="lead">Одно безопасное место, где молодёжь занимается спортом, развивается и проводит время с пользой.</p>
+    <div class="cards c3">
+      <div class="card"><div class="ic">🏗️</div><h3>Качественное покрытие</h3><p>Рампы, фигуры и гладкое профессиональное основание.</p></div>
+      <div class="card"><div class="ic">🌳</div><h3>Зона отдыха</h3><p>Скамейки, освещение, озеленение — место притяжения города.</p></div>
+      <div class="card"><div class="ic">🎯</div><h3>Для всех уровней</h3><p>От первых шагов новичка до тренировки трюков.</p></div>
+    </div>
+  </section>
+
+  <!-- 4 СНАРЯДЫ -->
+  <section class="slide">
+    <span class="bg-emoji">🚲</span>
+    <span class="kicker">Спортивные направления</span>
+    <h2>Три вида спорта<br>на одной площадке</h2>
+    <div class="cards c3">
+      <div class="card"><div class="ic">🚲</div><h3>BMX</h3><p>Трюковые велосипеды — сила, координация и зрелищность.</p></div>
+      <div class="card"><div class="ic">🛴</div><h3>Трюковой самокат</h3><p>Самый популярный и доступный старт для детей.</p></div>
+      <div class="card"><div class="ic">🛹</div><h3>Скейтборд</h3><p>Классика уличного спорта, баланс и чувство тела.</p></div>
+    </div>
+    <p class="lead">Дети осваивают новые спортивные снаряды и находят дело по душе.</p>
+  </section>
+
+  <!-- 5 БЕЗОПАСНОСТЬ -->
+  <section class="slide">
+    <span class="bg-emoji">🛡️</span>
+    <span class="kicker">Главный приоритет</span>
+    <h2>Безопасность<br>прежде всего</h2>
+    <div class="list">
+      <div class="li"><div class="n">1</div><div class="t"><b>Защитная экипировка.</b> <span>Шлемы, наколенники, налокотники и перчатки — обязательны для всех.</span></div></div>
+      <div class="li"><div class="n">2</div><div class="t"><b>Безопасное покрытие.</b> <span>Сертифицированные материалы, продуманные радиусы фигур, отсутствие острых углов.</span></div></div>
+      <div class="li"><div class="n">3</div><div class="t"><b>Зонирование.</b> <span>Раздельные зоны для новичков и опытных, чтобы потоки не пересекались.</span></div></div>
+      <div class="li"><div class="n">4</div><div class="t"><b>Освещение и аптечка.</b> <span>Хороший свет вечером и медицинский пункт первой помощи на месте.</span></div></div>
+    </div>
+  </section>
+
+  <!-- 6 ТРЕНЕР -->
+  <section class="slide">
+    <span class="bg-emoji">🧑‍🏫</span>
+    <span class="kicker">Ключевая роль</span>
+    <h2>Нужен <span class="grad">тренер</span></h2>
+    <div class="body">
+      <p>Без наставника спорт превращается в риск. Профессиональный тренер — основа безопасного и результативного парка.</p>
+    </div>
+    <div class="cards c2">
+      <div class="card"><div class="ic">🎓</div><h3>Правильная техника</h3><p>Учит трюкам и падениям так, чтобы избежать травм.</p></div>
+      <div class="card"><div class="ic">👀</div><h3>Контроль и порядок</h3><p>Следит за дисциплиной, экипировкой и безопасностью на площадке.</p></div>
+      <div class="card"><div class="ic">🏆</div><h3>Спортивные секции</h3><p>Группы, прогресс, соревнования и мотивация для детей.</p></div>
+      <div class="card"><div class="ic">❤️</div><h3>Наставничество</h3><p>Авторитетный взрослый, который направляет подростков.</p></div>
+    </div>
+  </section>
+
+  <!-- 7 СОЦИАЛЬНАЯ ПОЛЬЗА -->
+  <section class="slide">
+    <span class="bg-emoji">🤝</span>
+    <span class="kicker">Социальная сфера</span>
+    <h2>Польза для города<br>и его молодёжи</h2>
+    <div class="pillrow">
+      <span class="pill">💪 <b>Здоровье</b> и спорт вместо улицы</span>
+      <span class="pill">🚫 <b>Меньше</b> детской преступности</span>
+      <span class="pill">🤸 <b>Активный</b> и полезный досуг</span>
+      <span class="pill">👥 <b>Новые</b> знакомства и команда</span>
+      <span class="pill">🌟 <b>Точка</b> притяжения города</span>
+      <span class="pill">🏅 <b>Будущие</b> чемпионы Осетии</span>
+      <span class="pill">😊 <b>Гордость</b> и развитие региона</span>
+    </div>
+    <p class="lead">Парк объединяет молодёжь вокруг здорового образа жизни и даёт детям цель.</p>
+  </section>
+
+  <!-- 8 ЭКОНОМИКА / БЮДЖЕТ -->
+  <section class="slide">
+    <span class="bg-emoji">💰</span>
+    <span class="kicker">Экономика и бюджет</span>
+    <h2>Выгода для местного<br>бизнеса и казны</h2>
+    <div class="body">
+      <p>С появлением парка вырастет спрос на спортивный инвентарь. Это <b>возможность для местных торговцев</b> продавать самокаты, скейтборды, BMX, запчасти и защитную экипировку.</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="v">📈</div><div class="l">Рост продаж инвентаря и экипировки у местных продавцов</div></div>
+      <div class="stat"><div class="v">🏪</div><div class="l">Новые рабочие места: магазины, прокат, сервис, тренеры</div></div>
+      <div class="stat"><div class="v">🏛️</div><div class="l">Налоги и сборы с торговли — <b>средства в бюджет</b> города</div></div>
+    </div>
+  </section>
+
+  <!-- 9 ВСЕ ПЛЮСЫ -->
+  <section class="slide">
+    <span class="bg-emoji">✅</span>
+    <span class="kicker">Итог</span>
+    <h2>Все плюсы проекта<br>в одном месте</h2>
+    <div class="cards c2">
+      <div class="card"><div class="ic">🛹</div><h3>Спорт и развитие</h3><p>BMX, самокат, скейтборд — новые навыки для детей.</p></div>
+      <div class="card"><div class="ic">🛡️</div><h3>Безопасность</h3><p>Экипировка, зонирование, тренер и медпункт.</p></div>
+      <div class="card"><div class="ic">🤝</div><h3>Социальная польза</h3><p>Здоровый досуг и меньше уличных рисков.</p></div>
+      <div class="card"><div class="ic">💰</div><h3>Доход в бюджет</h3><p>Торговля инвентарём и налоги в казну города.</p></div>
+    </div>
+  </section>
+
+  <!-- 10 ПРИЗЫВ -->
+  <section class="slide">
+    <span class="bg-emoji">🚀</span>
+    <span class="kicker">Призыв к действию</span>
+    <h1>Дадим детям<br><span class="grad">место для роста</span></h1>
+    <div class="quote">«Скейт-парк — это инвестиция в здоровое, активное и успешное будущее Южной Осетии».</div>
+    <div class="cta">
+      <span class="b">Поддержать проект</span>
+      <span class="b ghost">Цхинвал · 2026</span>
+    </div>
+  </section>
+
+</div>
+
+<div class="arrows">
+  <button class="prev" onclick="move(-1)" aria-label="Назад">‹</button>
+  <button class="next" onclick="move(1)" aria-label="Вперёд">›</button>
+</div>
+<div class="hud"><div class="dots" id="dots"></div></div>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let i=0;
+document.getElementById('tot').textContent=slides.length;
+const dots=document.getElementById('dots');
+slides.forEach((_,k)=>{const d=document.createElement('div');d.className='dot'+(k===0?' on':'');
+  d.onclick=()=>show(k);dots.appendChild(d);});
+function show(n){
+  i=Math.max(0,Math.min(slides.length-1,n));
+  slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+  [...dots.children].forEach((d,k)=>d.classList.toggle('on',k===i));
+  document.getElementById('cur').textContent=i+1;
+}
+function move(d){show(i+d);}
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();move(1);}
+  if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();move(-1);}
+  if(e.key==='Home')show(0); if(e.key==='End')show(slides.length-1);
+});
+let sx=0;
+addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});
+addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx;
+  if(Math.abs(dx)>50)move(dx<0?1:-1);},{passive:true});
+</script>
+</body>
+</html>
